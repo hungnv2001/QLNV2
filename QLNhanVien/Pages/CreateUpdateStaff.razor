@@ -1,0 +1,131 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using MudBlazor
+@using QLNhanVien.Context
+@using QLNhanVien.Data
+@inject MyContext _context
+<div style="padding:20px">
+	@if (nhanVien != null)
+	{
+	
+	<MudGrid>
+		<MudItem md="5">
+			<MudTextField T="string" Label="Họ vàn tên" Variant="Variant.Outlined" @bind-Value="nhanVien.Ten" Adornment="Adornment.End" />
+			<MudTextField T="string" Label="Nghề nghiệp" Variant="Variant.Outlined" @bind-Value="nhanVien.NgheNghiep" Adornment="Adornment.End" />
+			<MudField Label="Họ và tên" Variant="Variant.Text" InnerPadding="false">
+				<MudRadioGroup @bind-Value="@nhanVien.GioiTinh" Name="Giới tính" Required=true>
+					<MudRadio Value='"Nam"' Color="Color.Primary">Nam</MudRadio>
+					<MudRadio Value='"Nữ"' Color="Color.Primary">Nữ</MudRadio>
+				</MudRadioGroup>
+			</MudField>
+		</MudItem>
+		<MudItem md="7">
+			<MudSelect T="KyNang" Label="Các kỹ năng" Variant="Variant.Outlined" MultiSelection="true" @bind-Value="value" @bind-SelectedValues="lstKyNangChoose" ToStringFunc="Converter">
+				@foreach (var item in lstKyNang)
+				{
+					<MudSelectItem T="KyNang" Value="@item">@item.Ten</MudSelectItem>
+				}
+			</MudSelect>
+		</MudItem>
+	</MudGrid>
+
+		<MudButton OnClick="Submit">@nameBT</MudButton>
+	}
+</div>
+
+<hr class="hr" />
+
+@code {
+	[Parameter]
+	public int ID { get; set; }
+	[CascadingParameter]
+	MudDialogInstance _dialogBox { get; set; }
+	NhanVien nhanVien = new NhanVien();
+	readonly Func<KyNang, string> Converter = p => p.Ten;
+	private KyNang value { get; set; } 
+	private IEnumerable<KyNang> lstKyNangChoose { get; set; } = new HashSet<KyNang>() { };
+	private IEnumerable<KyNang> lstKyNang { get; set; } = new HashSet<KyNang>() { };
+	private IEnumerable<KyNang> originalKyNangList { get; set; } = new HashSet<KyNang>() { };
+	string nameBT = "Thêm mới";
+	protected override async Task OnInitializedAsync()
+	{
+		LoadData();
+
+	}
+	private void LoadData()
+	{
+		if (ID!=0)
+		{
+			nameBT = "Cập nhật";
+			nhanVien = _context.NhanViens.Find(ID)!;
+		}
+		lstKyNang = _context.KyNangs.ToList();
+		lstKyNangChoose = _context.KyNangs.Include(k => k.KyNang_NhanViens)
+	.Where(k => k.KyNang_NhanViens.Any(p => p.IDNhanVien == ID))
+	.ToList() ?? new();
+		if (ID!=0)
+		{
+			originalKyNangList = lstKyNangChoose.Select(x => new KyNang { ID = x.ID, Ten = x.Ten }).ToList();
+		}
+		else
+		{
+			value = lstKyNang.First();
+		}
+		StateHasChanged();
+	}
+	private void Submit()
+	{
+		if (ID == 0)
+		{
+			_context.NhanViens.Add(nhanVien);
+			_context.SaveChanges();
+			foreach (var item in lstKyNangChoose)
+			{
+				_context.KyNang_NhanViens.Add(new KyNang_NhanVien()
+					{
+						IDKyNang = item.ID,
+						IDNhanVien = nhanVien.ID
+					});
+			}
+		}
+		else
+		{
+
+			var kyNangsToRemove = originalKyNangList
+				.Where(originalItem => !lstKyNangChoose.Any(newItem => newItem.ID == originalItem.ID))
+				.ToList();
+
+
+			var kyNangsToAdd = lstKyNangChoose
+				.Where(newItem => !originalKyNangList.Any(originalItem => originalItem.ID == newItem.ID))
+				.ToList();
+
+
+
+			var idsToRemove = kyNangsToRemove.Select(c => c.ID).ToList();
+
+			// Lấy danh sách các đối tượng từ cơ sở dữ liệu mà cần xóa
+			var lstRM = _context.KyNang_NhanViens
+				.Where(p => p.IDNhanVien == ID && idsToRemove.Contains(p.ID))
+				.ToList();
+
+			// Xóa các đối tượng nếu có
+			if (lstRM.Any())
+			{
+				_context.KyNang_NhanViens.RemoveRange(lstRM);
+			}
+			_context.NhanViens.Update(nhanVien);
+			foreach (var item in kyNangsToAdd)
+			{
+				_context.KyNang_NhanViens.Add(new KyNang_NhanVien()
+					{
+						IDKyNang = item.ID,
+						IDNhanVien = nhanVien.ID
+					});
+			}
+			 _context.SaveChanges();
+			
+		}
+		_dialogBox.Close();
+	}
+
+}

@@ -1,0 +1,151 @@
+﻿@page "/"
+@using Microsoft.EntityFrameworkCore
+@using MudBlazor
+@using QLNhanVien.Context
+@using QLNhanVien.Data
+@using QLNhanVien.Service
+@inject MyContext _context
+@inject IDialogService _dialogservice
+
+<MudTable Items="@lstNhanViens" Hover="true" Style="width:100%" SortLabel="Sort By">
+	<ToolBarContent>
+
+		<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Style="margin-bottom: 10px" title="Thêm" OnClick="@(async()=>await OpenDialog(0))">Thêm</MudButton>
+
+		<MudSpacer />
+	</ToolBarContent>
+	<HeaderContent>
+		<MudTh>STT</MudTh>
+		<MudTh>Tên</MudTh> 
+		<MudTh>Nghề Nghiệp</MudTh>
+		<MudTh>Giới tính</MudTh>
+		<MudTh>Kỹ năng</MudTh>
+		<MudTh>Kinh nghiệm(năm)</MudTh>
+		<MudTh >Hành Động</MudTh>
+	</HeaderContent>
+	<RowTemplate Context="data">
+		<MudTd DataLabel="STT">@(lstNhanViens.IndexOf(data) + 1)</MudTd>
+		<MudTd>@(data.Ten ?? "Data lỗi")</MudTd>
+		<MudTd>@(data.NgheNghiep ?? "Data lỗi")</MudTd>
+		<MudTd>@(data.GioiTinh ?? "Data lỗi")</MudTd>
+		<MudTd Style="padding-top: 20px">
+			@{
+				string kyNang = "";
+				if (data.KyNang_NhanViens != null)
+				{
+					foreach (var item in data.KyNang_NhanViens)
+					{
+						kyNang += item.KyNang.Ten + ",";
+					}
+				}
+				
+			}
+			@kyNang
+		</MudTd>
+		@{
+			double kinhNghiem = 0;
+			if (data.KinhNghiemLamViecs != null)
+			{
+				kinhNghiem = data.KinhNghiemLamViecs.Sum(p => p.ThoiGian);
+			}
+		}
+		@kinhNghiem
+		<MudIcon Color="Color.Primary" @onclick="()=>ViewKinhNghiem(data.ID)" Icon="@Icons.Material.Filled.RemoveRedEye" style="margin-left: 8px;" />
+		<MudTd>
+			<MudButtonGroup Variant="Variant.Filled">
+				<MudIconButton Color="Color.Warning" Icon="@Icons.Material.Filled.Edit" OnClick="@(async()=>await OpenDialog(data.ID))" Title="Sửa"></MudIconButton>
+				<MudIconButton Color="Color.Error"  Icon="@Icons.Material.Filled.PersonRemove" OnClick="@(async()=>await Delete(data.ID))" Title="Xóa"></MudIconButton>
+			</MudButtonGroup>
+		</MudTd>
+	</RowTemplate>
+	<PagerContent>
+		<MudTablePager />
+	</PagerContent>
+</MudTable>
+@code {
+	List<NhanVien> lstNhanViens = new();
+
+	private async Task LoadData()
+	{
+		lstNhanViens = new();
+		lstNhanViens = _context.NhanViens.Include(p => p.KyNang_NhanViens).ThenInclude(p => p.KyNang).Include(p=>p.KinhNghiemLamViecs).ToList();
+	}
+	private async Task Delete(int id)
+	{
+
+		var lstKNLV = _context.KinhNghiemLamViecs.Where(p => p.IDNhanVien == id);
+		var lstKN = _context.KyNang_NhanViens.Where(p => p.IDNhanVien == id);
+		if (lstKNLV.Count()>0)
+		{
+			_context.KinhNghiemLamViecs.RemoveRange(lstKNLV);
+		}
+		if (lstKN.Count() > 0)
+		{
+			_context.KyNang_NhanViens.RemoveRange(lstKN);
+		}
+		_context.NhanViens.Remove(_context.NhanViens.Find(id)!);
+		_context.SaveChanges();
+		LoadData();
+		StateHasChanged();
+	}
+	protected override async Task OnInitializedAsync()
+	{
+		  LoadData();
+	}
+	 async Task OpenDialog(int id)
+	{
+		var parameters = new DialogParameters();
+		string nameDialog = "Thêm mới nhân viên";
+		if (id != 0)
+		{
+			parameters.Add("id", id);
+			nameDialog = "Cập nhật nhân viên";
+		}
+		DialogOptions options = new DialogOptions()
+			{
+				CloseOnEscapeKey = true,
+				Position = DialogPosition.Center,
+				MaxWidth = MaxWidth.Large,
+				CloseButton = true,
+				FullWidth = true,
+				DisableBackdropClick = true,
+			};
+			var createUpdateDialog = await _dialogservice.ShowAsync<CreateUpdateStaff>(nameDialog, parameters, options);
+		var result = await createUpdateDialog.Result;
+		if (!result.Canceled)
+		{
+			createUpdateDialog.Close();
+		
+		}
+		 LoadData();
+		StateHasChanged();
+	
+	}
+	async Task ViewKinhNghiem(int id)
+	{
+		var parameters = new DialogParameters();
+		string nameDialog = "Danh sách kinh nghiệm";
+		
+			parameters.Add("id", id);
+		
+		DialogOptions options = new DialogOptions()
+			{
+				CloseOnEscapeKey = true,
+				Position = DialogPosition.Center,
+				MaxWidth = MaxWidth.Large,
+				CloseButton = true,
+				FullWidth = true,
+				DisableBackdropClick = true,
+			};
+		var createUpdateDialog = await _dialogservice.ShowAsync<ListKinhNghiem>(nameDialog, parameters, options);
+		var result = await createUpdateDialog.Result;
+		if (!result.Canceled)
+		{
+			createUpdateDialog.Close();
+
+		}
+		LoadData();
+		StateHasChanged();
+
+	}
+}

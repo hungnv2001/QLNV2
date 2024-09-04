@@ -1,0 +1,97 @@
+﻿
+@using Microsoft.EntityFrameworkCore
+@using MudBlazor
+@using QLNhanVien.Context
+@using QLNhanVien.Data
+@using QLNhanVien.Service
+@inject MyContext _context
+@inject IDialogService _dialogservice
+
+<MudTable Items="@lstKinhNghiem" Hover="true" Style="width:100%" SortLabel="Sort By">
+	<ToolBarContent>
+
+		<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Style="margin-bottom: 10px" title="Thêm" OnClick="@(async()=>await OpenDialog(0))">Thêm</MudButton>
+
+		<MudSpacer />
+	</ToolBarContent>
+	<HeaderContent>
+		<MudTh>STT</MudTh>
+		<MudTh>Tên kinh nghiệm</MudTh>
+		<MudTh>Vị trí</MudTh>
+		<MudTh>Mô tả</MudTh>
+		<MudTh>Công nghệ</MudTh>
+		<MudTh>Thời gian</MudTh>
+		<MudTh>Hành Động</MudTh>
+	</HeaderContent>
+	<RowTemplate Context="data">
+		<MudTd DataLabel="STT">@(lstKinhNghiem.IndexOf(data) + 1)</MudTd>
+		<MudTd>@(data.TenKinhNghiem ?? "Data lỗi")</MudTd>
+		<MudTd>@(data.ViTri ?? "Data lỗi")</MudTd>
+		<MudTd>@(data.Mota ?? "Data lỗi")</MudTd>
+		<MudTd>@(data.CongNghe ?? "Data lỗi")</MudTd>
+		<MudTd>@(data.ThoiGian )</MudTd>
+		
+		<MudTd>
+			<MudButtonGroup Variant="Variant.Filled">
+				<MudIconButton Color="Color.Warning" Icon="@Icons.Material.Filled.Edit" OnClick="@(async()=>await OpenDialog(data.ID))" Title="Sửa"></MudIconButton>
+				<MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.PersonRemove" OnClick="@(async()=>await Delete(data.ID))" Title="Xóa"></MudIconButton>
+			</MudButtonGroup>
+		</MudTd>
+	</RowTemplate>
+	<PagerContent>
+		<MudTablePager />
+	</PagerContent>
+</MudTable>
+@code {
+	[Parameter]
+	public int ID { get; set; }
+	List<KinhNghiemLamViec> lstKinhNghiem = new();
+
+	private async Task LoadData()
+	{
+		lstKinhNghiem = new();
+		lstKinhNghiem = _context.KinhNghiemLamViecs.Where(p=>p.IDNhanVien==ID).ToList();
+	}
+	private async Task Delete(int id)
+	{
+
+		_context.KinhNghiemLamViecs.Remove(_context.KinhNghiemLamViecs.Find(id)!);
+		_context.SaveChanges();
+		LoadData();
+		StateHasChanged();
+	}
+	protected override async Task OnInitializedAsync()
+	{
+		LoadData();
+	}
+	async Task OpenDialog(int id)
+	{
+		var parameters = new DialogParameters();
+		string nameDialog = "Thêm mới kinh nghiệm";
+		parameters.Add("idStaff", ID);
+		if (id != 0)
+		{
+			parameters.Add("id", id);
+			nameDialog = "Cập nhật kinh nghiệm";
+		}
+		DialogOptions options = new DialogOptions()
+			{
+				CloseOnEscapeKey = true,
+				Position = DialogPosition.Center,
+				MaxWidth = MaxWidth.Large,
+				CloseButton = true,
+				FullWidth = true,
+				DisableBackdropClick = true,
+			};
+		var createUpdateDialog = await _dialogservice.ShowAsync<CreateUpdateKinhNghiem>(nameDialog, parameters, options);
+		var result = await createUpdateDialog.Result;
+		if (!result.Canceled)
+		{
+			createUpdateDialog.Close();
+
+		}
+		LoadData();
+		StateHasChanged();
+
+	}
+}

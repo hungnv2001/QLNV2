@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34714.143
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QLNhanVien", "..\QLNhanVien\QLNhanVien.csproj", "{EA9A30D1-D6ED-46CA-BD9A-9D163E077274}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QLNhanVien", "QLNhanVien\QLNhanVien.csproj", "{8EB50D5D-28D1-43C7-BF2E-C6FB1C6AEADD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{EA9A30D1-D6ED-46CA-BD9A-9D163E077274}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EA9A30D1-D6ED-46CA-BD9A-9D163E077274}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EA9A30D1-D6ED-46CA-BD9A-9D163E077274}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EA9A30D1-D6ED-46CA-BD9A-9D163E077274}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EB50D5D-28D1-43C7-BF2E-C6FB1C6AEADD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EB50D5D-28D1-43C7-BF2E-C6FB1C6AEADD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EB50D5D-28D1-43C7-BF2E-C6FB1C6AEADD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EB50D5D-28D1-43C7-BF2E-C6FB1C6AEADD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

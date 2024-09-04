@@ -1,0 +1,63 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using MudBlazor
+@using QLNhanVien.Context
+@using QLNhanVien.Data
+@inject MyContext _context
+<div style="padding:20px">
+	@if (kinhNghiem != null)
+	{
+				<MudTextField T="string" Label="Tên kinh nghiệm" Variant="Variant.Outlined" @bind-Value="kinhNghiem.TenKinhNghiem" Adornment="Adornment.End" />
+				<MudTextField T="string" Label="Mô tả" Variant="Variant.Outlined" @bind-Value="kinhNghiem.Mota" Adornment="Adornment.End" />
+				<MudTextField T="string" Label="Vị trí" Variant="Variant.Outlined" @bind-Value="kinhNghiem.ViTri" Adornment="Adornment.End" />
+				<MudTextField T="string" Label="Công nghệ" Variant="Variant.Outlined" @bind-Value="kinhNghiem.CongNghe" Adornment="Adornment.End" />
+				<MudTextField T="double" Label="Thời gian" Variant="Variant.Outlined" @bind-Value="kinhNghiem.ThoiGian" Adornment="Adornment.End" />
+		<MudButton OnClick="Submit">@namebt</MudButton>
+	}
+</div>
+
+<hr class="hr" />
+
+@code {
+	[Parameter]
+	public int ID { get; set; }
+	[Parameter]
+	public int idStaff { get; set; }
+	[CascadingParameter]
+	MudDialogInstance _dialogBox { get; set; }
+	KinhNghiemLamViec kinhNghiem = new KinhNghiemLamViec();
+	string namebt = "Thêm mới";
+
+	protected override async Task OnInitializedAsync()
+	{
+		LoadData();
+
+	}
+	private void LoadData()
+	{
+		if (ID != 0)
+		{
+			namebt = "Cập nhật";
+			kinhNghiem = _context.KinhNghiemLamViecs.FirstOrDefault(p=>p.ID==ID);
+		}
+
+		StateHasChanged();
+	}
+	private void Submit()
+	{
+		if (ID == 0)
+		{
+			kinhNghiem.IDNhanVien = idStaff;
+			_context.KinhNghiemLamViecs.Add(kinhNghiem);
+			
+		}
+		else
+		{
+			_context.KinhNghiemLamViecs.Update(kinhNghiem);
+
+
+		}
+			_context.SaveChanges();
+		_dialogBox.Close();
+	}
+
+}
